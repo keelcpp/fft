@@ -2,32 +2,32 @@
 
 namespace keel::detail {
 
-void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* dst) noexcept {
+void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* dst) noexcept {
     portable_rfft_twist_full(z_re, z_im, n, w_full, scale, dst, 1);
 }
 
-void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* dst) noexcept {
+void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* dst) noexcept {
     portable_rfft_twist_full(z_re, z_im, n, w_full, scale, dst, 1);
 }
 
-void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* half_dst) noexcept {
+void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* half_dst) noexcept {
     portable_rfft_twist_half(z_re, z_im, n, w_full, scale, half_dst, 1);
 }
 
-void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* half_dst) noexcept {
+void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* half_dst) noexcept {
     portable_rfft_twist_half(z_re, z_im, n, w_full, scale, half_dst, 1);
 }
 
-void irfft_untwist_conj_unit_stride(const Complex64* half_src, usize n, const Complex64* w_full, f64* z_re,
+void irfft_untwist_conj_unit_stride(const c64* half_src, usize n, const c64* w_full, f64* z_re,
                                     f64* z_im) noexcept {
     portable_irfft_untwist_conj(half_src, 1, n, w_full, z_re, z_im);
 }
 
-void irfft_untwist_conj_unit_stride(const Complex32* half_src, usize n, const Complex32* w_full, f32* z_re,
+void irfft_untwist_conj_unit_stride(const c32* half_src, usize n, const c32* w_full, f32* z_re,
                                     f32* z_im) noexcept {
     portable_irfft_untwist_conj(half_src, 1, n, w_full, z_re, z_im);
 }
@@ -67,7 +67,7 @@ void soa_wrap(Cplx* buf, usize n, const Cplx* w_fwd,
 
 } // namespace
 
-void fft_radix2_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix2_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (detail::is_pow4(n) && n >= 64) {
         detail::portable_radix4_pow4_inplace(buf, n, w_fwd);
     } else {
@@ -75,7 +75,7 @@ void fft_radix2_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcep
     }
 }
 
-void fft_radix2_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix2_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (detail::is_pow4(n) && n >= 64) {
         detail::portable_radix4_pow4_inplace(buf, n, w_fwd);
     } else {
@@ -83,39 +83,39 @@ void fft_radix2_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcep
     }
 }
 
-void fft_radix4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix4_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     detail::portable_radix4_pow4_inplace(buf, n, w_fwd);
 }
 
-void fft_radix4_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix4_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     detail::portable_radix4_pow4_inplace(buf, n, w_fwd);
 }
 
-void fft_stockham_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_stockham_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     detail::portable_stockham_inplace(buf, n, w_fwd);
 }
 
-void fft_stockham_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_stockham_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     detail::portable_stockham_inplace(buf, n, w_fwd);
 }
 
-void fft_radix2_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
-    soa_wrap<f64, Complex64>(buf, n, w_fwd, &detail::portable_radix2_soa_stages_inplace<f64, Complex64>);
+void fft_radix2_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
+    soa_wrap<f64, c64>(buf, n, w_fwd, &detail::portable_radix2_soa_stages_inplace<f64, c64>);
 }
 
-void fft_radix2_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
-    soa_wrap<f32, Complex32>(buf, n, w_fwd, &detail::portable_radix2_soa_stages_inplace<f32, Complex32>);
+void fft_radix2_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
+    soa_wrap<f32, c32>(buf, n, w_fwd, &detail::portable_radix2_soa_stages_inplace<f32, c32>);
 }
 
-void fft_radix4_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
-    soa_wrap<f64, Complex64>(buf, n, w_fwd, &detail::portable_radix4_pow4_soa_stages_inplace<f64, Complex64>);
+void fft_radix4_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
+    soa_wrap<f64, c64>(buf, n, w_fwd, &detail::portable_radix4_pow4_soa_stages_inplace<f64, c64>);
 }
 
-void fft_radix4_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
-    soa_wrap<f32, Complex32>(buf, n, w_fwd, &detail::portable_radix4_pow4_soa_stages_inplace<f32, Complex32>);
+void fft_radix4_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
+    soa_wrap<f32, c32>(buf, n, w_fwd, &detail::portable_radix4_pow4_soa_stages_inplace<f32, c32>);
 }
 
-void fft_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) noexcept {
+void fft_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_fwd) noexcept {
     if (detail::is_pow4(n) && n >= 64) {
         detail::portable_radix4_pow4_soa_stages_inplace(re, im, n, w_fwd);
     } else {
@@ -123,7 +123,7 @@ void fft_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) n
     }
 }
 
-void fft_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w_fwd) noexcept {
+void fft_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept {
     if (detail::is_pow4(n) && n >= 64) {
         detail::portable_radix4_pow4_soa_stages_inplace(re, im, n, w_fwd);
     } else {

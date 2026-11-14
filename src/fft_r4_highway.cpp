@@ -130,12 +130,12 @@ void radix4_pow4_body(Cplx* buf, usize n, const Cplx* w_fwd, T* sw_base, usize s
     }
 }
 
-void Radix4Pow4F64(Complex64* buf, usize n, const Complex64* w_fwd, f64* sw_base, usize stride) {
-    radix4_pow4_body<f64, Complex64>(buf, n, w_fwd, sw_base, stride);
+void Radix4Pow4F64(c64* buf, usize n, const c64* w_fwd, f64* sw_base, usize stride) {
+    radix4_pow4_body<f64, c64>(buf, n, w_fwd, sw_base, stride);
 }
 
-void Radix4Pow4F32(Complex32* buf, usize n, const Complex32* w_fwd, f32* sw_base, usize stride) {
-    radix4_pow4_body<f32, Complex32>(buf, n, w_fwd, sw_base, stride);
+void Radix4Pow4F32(c32* buf, usize n, const c32* w_fwd, f32* sw_base, usize stride) {
+    radix4_pow4_body<f32, c32>(buf, n, w_fwd, sw_base, stride);
 }
 
 } // namespace HWY_NAMESPACE
@@ -149,7 +149,7 @@ namespace keel::detail {
 HWY_EXPORT(Radix4Pow4F64);
 HWY_EXPORT(Radix4Pow4F32);
 
-void hwy_radix4_pow4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void hwy_radix4_pow4_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     const usize stride = (n >> 2) + 8;
@@ -157,7 +157,7 @@ void hwy_radix4_pow4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) no
     HWY_DYNAMIC_DISPATCH(Radix4Pow4F64)(buf, n, w_fwd, sw_base, stride);
 }
 
-void hwy_radix4_pow4_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void hwy_radix4_pow4_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     const usize stride = (n >> 2) + 16;

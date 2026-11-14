@@ -44,7 +44,7 @@ struct Rng {
     f32 next_f32() noexcept { return static_cast<f32>(next_f64()); }
 };
 
-f64 max_abs_diff_c64(ArrayRef<Complex64> a, ArrayRef<Complex64> b) noexcept {
+f64 max_abs_diff_c64(ArrayRef<c64> a, ArrayRef<c64> b) noexcept {
     if (a.size() != b.size()) return 1e100;
     f64 m = 0.0;
     for (usize i = 0; i < a.size(); ++i) {
@@ -56,7 +56,7 @@ f64 max_abs_diff_c64(ArrayRef<Complex64> a, ArrayRef<Complex64> b) noexcept {
     return m;
 }
 
-f64 max_abs_diff_c32_vs_c64(ArrayRef<Complex32> a, ArrayRef<Complex64> b) noexcept {
+f64 max_abs_diff_c32_vs_c64(ArrayRef<c32> a, ArrayRef<c64> b) noexcept {
     if (a.size() != b.size()) return 1e100;
     f64 m = 0.0;
     for (usize i = 0; i < a.size(); ++i) {
@@ -68,7 +68,7 @@ f64 max_abs_diff_c32_vs_c64(ArrayRef<Complex32> a, ArrayRef<Complex64> b) noexce
     return m;
 }
 
-f64 max_abs_diff_c32(ArrayRef<Complex32> a, ArrayRef<Complex32> b) noexcept {
+f64 max_abs_diff_c32(ArrayRef<c32> a, ArrayRef<c32> b) noexcept {
     if (a.size() != b.size()) return 1e100;
     f64 m = 0.0;
     for (usize i = 0; i < a.size(); ++i) {
@@ -101,10 +101,10 @@ f64 max_abs_diff_f32(ArrayRef<f32> a, ArrayRef<f32> b) noexcept {
 }
 
 // Exact O(N^2) double-precision DFT reference with modular angle reduction to avoid precision drift.
-Array<Complex64> naive_dft(ArrayRef<Complex64> x, FftDirection dir,
+Array<c64> naive_dft(ArrayRef<c64> x, FftDirection dir,
                            FftNormalization norm = FftNormalization::Backward) {
     const usize n = x.size();
-    Array<Complex64> out(n);
+    Array<c64> out(n);
     if (n == 0) return out;
 
     const f64 sign = static_cast<f64>(static_cast<i8>(dir));
@@ -129,22 +129,22 @@ Array<Complex64> naive_dft(ArrayRef<Complex64> x, FftDirection dir,
             sum_re += x[j].re * wr - x[j].im * wi;
             sum_im += x[j].re * wi + x[j].im * wr;
         }
-        out[k] = Complex64(sum_re * scale, sum_im * scale);
+        out[k] = c64(sum_re * scale, sum_im * scale);
     }
     return out;
 }
 
 void test_complex_and_shift() {
-    constexpr Complex64 a(3.0, -4.0);
-    constexpr Complex64 b(1.5, 2.0);
-    static_assert(conj(a) == Complex64(3.0, 4.0));
+    constexpr c64 a(3.0, -4.0);
+    constexpr c64 b(1.5, 2.0);
+    static_assert(conj(a) == c64(3.0, 4.0));
     static_assert(norm_sq(a) == 25.0);
-    static_assert((a + b) == Complex64(4.5, -2.0));
-    static_assert((a - b) == Complex64(1.5, -6.0));
-    static_assert((a * b) == Complex64(12.5, 0.0));
-    static_assert((-a) == Complex64(-3.0, 4.0));
+    static_assert((a + b) == c64(4.5, -2.0));
+    static_assert((a - b) == c64(1.5, -6.0));
+    static_assert((a * b) == c64(12.5, 0.0));
+    static_assert((-a) == c64(-3.0, 4.0));
 
-    Complex64 c = a;
+    c64 c = a;
     c += b;
     c -= b;
     TEST_CHECK(c == a);
@@ -152,10 +152,10 @@ void test_complex_and_shift() {
     c /= 2.0;
     TEST_CHECK(c == a);
 
-    constexpr Complex32 a32 = to_complex32(a);
-    static_assert(a32 == Complex32(3.0f, -4.0f));
-    static_assert(to_complex64(a32) == a);
-    static_assert(conj(a32) == Complex32(3.0f, 4.0f));
+    constexpr c32 a32 = static_cast<c32>(a);
+    static_assert(a32 == c32(3.0f, -4.0f));
+    static_assert(c64(a32) == a);
+    static_assert(conj(a32) == c32(3.0f, 4.0f));
     static_assert(norm_sq(a32) == 25.0f);
 
     // Even and odd fftshift / ifftshift round-trip
@@ -182,8 +182,8 @@ void test_complex_and_shift() {
     }
 
     // Empty no-op safety
-    ArrayRef<Complex64> empty64{};
-    MutArrayRef<Complex64> mut_empty64{};
+    ArrayRef<c64> empty64{};
+    MutArrayRef<c64> mut_empty64{};
     fft_1d_inplace(mut_empty64);
     ifft_1d_inplace(mut_empty64);
     fft_1d(empty64, mut_empty64);
@@ -200,39 +200,39 @@ void test_power_of_two_and_low_level_kernels() {
     const usize sizes[] = {1, 2, 4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096};
 
     for (usize n : sizes) {
-        Array<Complex64> in64(n);
-        Array<Complex32> in32(n);
+        Array<c64> in64(n);
+        Array<c32> in32(n);
         for (usize i = 0; i < n; ++i) {
             const f64 re = rng.next_f64();
             const f64 im = rng.next_f64();
-            in64[i] = Complex64(re, im);
-            in32[i] = Complex32(static_cast<f32>(re), static_cast<f32>(im));
+            in64[i] = c64(re, im);
+            in32[i] = c32(static_cast<f32>(re), static_cast<f32>(im));
         }
 
         // Exact reference computed from both exact f64 input and quantized f32 input
-        Array<Complex64> in32_as_64(n);
+        Array<c64> in32_as_64(n);
         for (usize i = 0; i < n; ++i) {
-            in32_as_64[i] = to_complex64(in32[i]);
+            in32_as_64[i] = in32[i];
         }
-        const Array<Complex64> ref_fwd64 = naive_dft(in64, FftDirection::Forward, FftNormalization::Backward);
-        const Array<Complex64> ref_inv64 = naive_dft(in64, FftDirection::Inverse, FftNormalization::Backward);
-        const Array<Complex64> ref_fwd32 = naive_dft(in32_as_64, FftDirection::Forward, FftNormalization::Backward);
+        const Array<c64> ref_fwd64 = naive_dft(in64, FftDirection::Forward, FftNormalization::Backward);
+        const Array<c64> ref_inv64 = naive_dft(in64, FftDirection::Inverse, FftNormalization::Backward);
+        const Array<c64> ref_fwd32 = naive_dft(in32_as_64, FftDirection::Forward, FftNormalization::Backward);
 
         // 1. High-level stateless f64 forward + inverse + round-trip
-        Array<Complex64> work64 = in64.clone();
+        Array<c64> work64 = in64.clone();
         fft_1d_inplace(work64);
         TEST_CHECK(max_abs_diff_c64(work64, ref_fwd64) < 1e-11);
         ifft_1d_inplace(work64);
         TEST_CHECK(max_abs_diff_c64(work64, in64) < 1e-11);
 
-        Array<Complex64> inv_direct64(n);
+        Array<c64> inv_direct64(n);
         ifft_1d(in64, inv_direct64);
         TEST_CHECK(max_abs_diff_c64(inv_direct64, ref_inv64) < 1e-11);
 
         // Ortho normalization round-trip
-        Array<Complex64> ortho64(n);
+        Array<c64> ortho64(n);
         fft_1d(in64, ortho64, FftNormalization::Ortho);
-        const Array<Complex64> ref_ortho = naive_dft(in64, FftDirection::Forward, FftNormalization::Ortho);
+        const Array<c64> ref_ortho = naive_dft(in64, FftDirection::Forward, FftNormalization::Ortho);
         TEST_CHECK(max_abs_diff_c64(ortho64, ref_ortho) < 1e-11);
         ifft_1d_inplace(ortho64, FftNormalization::Ortho);
         TEST_CHECK(max_abs_diff_c64(ortho64, in64) < 1e-11);
@@ -240,20 +240,20 @@ void test_power_of_two_and_low_level_kernels() {
         // 2. High-level stateless f32 forward + inverse round-trip
         // Relative to DFT magnitude (which grows like sqrt(N)), keep strict < 1e-4 bound
         const f64 tol32 = (n <= 1024) ? 5e-5 : 1e-4;
-        Array<Complex32> work32 = in32.clone();
+        Array<c32> work32 = in32.clone();
         fft_1d_inplace(work32);
         TEST_CHECK(max_abs_diff_c32_vs_c64(work32, ref_fwd32) < tol32);
         ifft_1d_inplace(work32);
         TEST_CHECK(max_abs_diff_c32(work32, in32) < 1e-5);
 
         // 3. Low-level kernel entry points (f64 & f32)
-        Array<Complex64> w64(n >> 1);
+        Array<c64> w64(n >> 1);
         fill_twiddles_f64(w64, n, FftDirection::Forward);
-        Array<Complex32> w32(n >> 1);
+        Array<c32> w32(n >> 1);
         fill_twiddles_f32(w32, n, FftDirection::Forward);
 
-        auto check_kernel64 = [&](void (*fn)(Complex64*, usize, const Complex64*) noexcept) {
-            Array<Complex64> b = in64.clone();
+        auto check_kernel64 = [&](void (*fn)(c64*, usize, const c64*) noexcept) {
+            Array<c64> b = in64.clone();
             fn(b.data(), n, w64.data());
             TEST_CHECK(max_abs_diff_c64(b, ref_fwd64) < 1e-11);
         };
@@ -270,15 +270,15 @@ void test_power_of_two_and_low_level_kernels() {
                 im[i] = in64[i].im;
             }
             fft_soa_stages_inplace(re.data(), im.data(), n, w64.data());
-            Array<Complex64> soa_out(n);
+            Array<c64> soa_out(n);
             for (usize i = 0; i < n; ++i) {
-                soa_out[i] = Complex64(re[i], im[i]);
+                soa_out[i] = c64(re[i], im[i]);
             }
             TEST_CHECK(max_abs_diff_c64(soa_out, ref_fwd64) < 1e-11);
         }
 
-        auto check_kernel32 = [&](void (*fn)(Complex32*, usize, const Complex32*) noexcept) {
-            Array<Complex32> b = in32.clone();
+        auto check_kernel32 = [&](void (*fn)(c32*, usize, const c32*) noexcept) {
+            Array<c32> b = in32.clone();
             fn(b.data(), n, w32.data());
             TEST_CHECK(max_abs_diff_c32_vs_c64(b, ref_fwd32) < tol32);
         };
@@ -295,9 +295,9 @@ void test_power_of_two_and_low_level_kernels() {
                 im[i] = in32[i].im;
             }
             fft_soa_stages_inplace(re.data(), im.data(), n, w32.data());
-            Array<Complex32> soa_out(n);
+            Array<c32> soa_out(n);
             for (usize i = 0; i < n; ++i) {
-                soa_out[i] = Complex32(re[i], im[i]);
+                soa_out[i] = c32(re[i], im[i]);
             }
             TEST_CHECK(max_abs_diff_c32_vs_c64(soa_out, ref_fwd32) < tol32);
         }
@@ -306,18 +306,18 @@ void test_power_of_two_and_low_level_kernels() {
     // Large threshold check: N = 16384 exercises Radix-4 SoA dispatcher in both f64 and f32
     {
         const usize n = 16384;
-        Array<Complex64> x64(n);
-        Array<Complex32> x32(n);
+        Array<c64> x64(n);
+        Array<c32> x32(n);
         for (usize i = 0; i < n; ++i) {
             const f64 re = rng.next_f64();
             const f64 im = rng.next_f64();
-            x64[i] = Complex64(re, im);
-            x32[i] = Complex32(static_cast<f32>(re), static_cast<f32>(im));
+            x64[i] = c64(re, im);
+            x32[i] = c32(static_cast<f32>(re), static_cast<f32>(im));
         }
 
-        Array<Complex64> a64 = x64.clone();
-        Array<Complex64> b64 = x64.clone();
-        Array<Complex64> w64(n >> 1);
+        Array<c64> a64 = x64.clone();
+        Array<c64> b64 = x64.clone();
+        Array<c64> w64(n >> 1);
         fill_twiddles_f64(w64, n, FftDirection::Forward);
         fft_radix2_inplace(a64.data(), n, w64.data());
         fft_stockham_inplace(b64.data(), n, w64.data());
@@ -325,7 +325,7 @@ void test_power_of_two_and_low_level_kernels() {
         ifft_1d_inplace(a64);
         TEST_CHECK(max_abs_diff_c64(a64, x64) < 1e-11);
 
-        Array<Complex32> a32 = x32.clone();
+        Array<c32> a32 = x32.clone();
         fft_1d_inplace(a32);
         ifft_1d_inplace(a32);
         TEST_CHECK(max_abs_diff_c32(a32, x32) < 1e-5);
@@ -337,63 +337,63 @@ void test_bluestein_arbitrary_lengths_and_padding() {
     const usize sizes[] = {3, 5, 6, 7, 15, 17, 100, 127, 480, 1000};
 
     for (usize n : sizes) {
-        Array<Complex64> in64(n);
-        Array<Complex32> in32(n);
-        Array<Complex64> in32_as_64(n);
+        Array<c64> in64(n);
+        Array<c32> in32(n);
+        Array<c64> in32_as_64(n);
         for (usize i = 0; i < n; ++i) {
             const f64 re = rng.next_f64();
             const f64 im = rng.next_f64();
-            in64[i] = Complex64(re, im);
-            in32[i] = Complex32(static_cast<f32>(re), static_cast<f32>(im));
-            in32_as_64[i] = to_complex64(in32[i]);
+            in64[i] = c64(re, im);
+            in32[i] = c32(static_cast<f32>(re), static_cast<f32>(im));
+            in32_as_64[i] = in32[i];
         }
 
-        const Array<Complex64> ref_fwd64 = naive_dft(in64, FftDirection::Forward);
-        const Array<Complex64> ref_inv64 = naive_dft(in64, FftDirection::Inverse);
-        const Array<Complex64> ref_fwd32 = naive_dft(in32_as_64, FftDirection::Forward);
+        const Array<c64> ref_fwd64 = naive_dft(in64, FftDirection::Forward);
+        const Array<c64> ref_inv64 = naive_dft(in64, FftDirection::Inverse);
+        const Array<c64> ref_fwd32 = naive_dft(in32_as_64, FftDirection::Forward);
 
-        Array<Complex64> out64(n);
+        Array<c64> out64(n);
         fft_1d(in64, out64);
         TEST_CHECK(max_abs_diff_c64(out64, ref_fwd64) < 1e-11);
 
-        Array<Complex64> back64(n);
+        Array<c64> back64(n);
         ifft_1d(out64, back64);
         TEST_CHECK(max_abs_diff_c64(back64, in64) < 1e-11);
 
-        Array<Complex64> inv64(n);
+        Array<c64> inv64(n);
         ifft_1d(in64, inv64);
         TEST_CHECK(max_abs_diff_c64(inv64, ref_inv64) < 1e-11);
 
         // Ortho round-trip on non-pow2
-        Array<Complex64> ortho64 = in64.clone();
+        Array<c64> ortho64 = in64.clone();
         fft_1d_inplace(ortho64, FftNormalization::Ortho);
         ifft_1d_inplace(ortho64, FftNormalization::Ortho);
         TEST_CHECK(max_abs_diff_c64(ortho64, in64) < 1e-11);
 
         // f32 Bluestein forward + inverse round-trip
-        Array<Complex32> out32(n);
+        Array<c32> out32(n);
         fft_1d(in32, out32);
         TEST_CHECK(max_abs_diff_c32_vs_c64(out32, ref_fwd32) < 1e-4);
 
-        Array<Complex32> back32(n);
+        Array<c32> back32(n);
         ifft_1d(out32, back32);
         TEST_CHECK(max_abs_diff_c32(back32, in32) < 2e-5);
     }
 
     // Zero-padding and truncation in fft_1d / ifft_1d (both pow2 and non-pow2 target sizes)
-    Array<Complex64> short_in(11);
+    Array<c64> short_in(11);
     for (usize i = 0; i < 11; ++i) {
-        short_in[i] = Complex64(rng.next_f64(), rng.next_f64());
+        short_in[i] = c64(rng.next_f64(), rng.next_f64());
     }
     for (usize dst_n : {usize{5}, usize{16}, usize{23}}) {
-        Array<Complex64> padded(dst_n, Complex64(0.0, 0.0));
+        Array<c64> padded(dst_n, c64(0.0, 0.0));
         const usize copy_n = (short_in.size() < dst_n) ? short_in.size() : dst_n;
         for (usize i = 0; i < copy_n; ++i) padded[i] = short_in[i];
 
-        const Array<Complex64> ref_f = naive_dft(padded, FftDirection::Forward);
-        const Array<Complex64> ref_i = naive_dft(padded, FftDirection::Inverse);
+        const Array<c64> ref_f = naive_dft(padded, FftDirection::Forward);
+        const Array<c64> ref_i = naive_dft(padded, FftDirection::Inverse);
 
-        Array<Complex64> got_f(dst_n), got_i(dst_n);
+        Array<c64> got_f(dst_n), got_i(dst_n);
         fft_1d(short_in, got_f);
         ifft_1d(short_in, got_i);
         TEST_CHECK(max_abs_diff_c64(got_f, ref_f) < 1e-11);
@@ -408,22 +408,22 @@ void test_real_fft_and_irfft() {
     for (usize n : sizes) {
         Array<f64> r64(n);
         Array<f32> r32(n);
-        Array<Complex64> c_ref_in64(n);
-        Array<Complex64> c_ref_in32(n);
+        Array<c64> c_ref_in64(n);
+        Array<c64> c_ref_in32(n);
         for (usize i = 0; i < n; ++i) {
             const f64 v = rng.next_f64();
             r64[i] = v;
             r32[i] = static_cast<f32>(v);
-            c_ref_in64[i] = Complex64(v, 0.0);
-            c_ref_in32[i] = Complex64(static_cast<f64>(r32[i]), 0.0);
+            c_ref_in64[i] = c64(v, 0.0);
+            c_ref_in32[i] = c64(static_cast<f64>(r32[i]), 0.0);
         }
 
-        const Array<Complex64> ref64 = naive_dft(c_ref_in64, FftDirection::Forward);
-        const Array<Complex64> ref32 = naive_dft(c_ref_in32, FftDirection::Forward);
+        const Array<c64> ref64 = naive_dft(c_ref_in64, FftDirection::Forward);
+        const Array<c64> ref32 = naive_dft(c_ref_in32, FftDirection::Forward);
         const usize half_bins = (n / 2) + 1;
 
         // f64 fft_1d_real (full N) + rfft_1d (n/2 + 1) + irfft_1d + ifft_1d_symmetric
-        Array<Complex64> full64(n);
+        Array<c64> full64(n);
         fft_1d_real(r64, full64);
         TEST_CHECK(max_abs_diff_c64(full64, ref64) < 1e-11);
         TEST_CHECK(full64[0].im == 0.0);
@@ -431,40 +431,40 @@ void test_real_fft_and_irfft() {
             TEST_CHECK(full64[n / 2].im == 0.0);
         }
 
-        Array<Complex64> half64(half_bins);
+        Array<c64> half64(half_bins);
         rfft_1d(r64, half64);
-        TEST_CHECK(max_abs_diff_c64(half64, ArrayRef<Complex64>(ref64).slice(0, half_bins)) < 1e-11);
+        TEST_CHECK(max_abs_diff_c64(half64, ArrayRef<c64>(ref64).slice(0, half_bins)) < 1e-11);
 
         Array<f64> rec64(n);
         irfft_1d(half64, rec64, n);
         TEST_CHECK(max_abs_diff_f64(rec64, r64) < 1e-11);
 
         // Perturb upper conjugate half & DC/Nyquist imag before symmetric ifft: lower half must win
-        Array<Complex64> noisy_sym64 = full64.clone();
+        Array<c64> noisy_sym64 = full64.clone();
         noisy_sym64[0].im = 99.0;
         if ((n & 1u) == 0u) noisy_sym64[n / 2].im = -77.0;
         for (usize k = half_bins; k < n; ++k) {
-            noisy_sym64[k] = Complex64(123.0, -456.0);
+            noisy_sym64[k] = c64(123.0, -456.0);
         }
         Array<f64> sym_rec64(n);
         ifft_1d_symmetric(noisy_sym64, sym_rec64);
         TEST_CHECK(max_abs_diff_f64(sym_rec64, r64) < 1e-11);
 
         // Ortho rfft/irfft round-trip
-        Array<Complex64> half_ortho64(half_bins);
+        Array<c64> half_ortho64(half_bins);
         rfft_1d(r64, half_ortho64, FftNormalization::Ortho);
         Array<f64> rec_ortho64(n);
         irfft_1d(half_ortho64, rec_ortho64, n, FftNormalization::Ortho);
         TEST_CHECK(max_abs_diff_f64(rec_ortho64, r64) < 1e-11);
 
         // f32 fft_1d_real + rfft_1d + irfft_1d + ifft_1d_symmetric
-        Array<Complex32> full32(n);
+        Array<c32> full32(n);
         fft_1d_real(r32, full32);
         TEST_CHECK(max_abs_diff_c32_vs_c64(full32, ref32) < 1e-4);
 
-        Array<Complex32> half32(half_bins);
+        Array<c32> half32(half_bins);
         rfft_1d(r32, half32);
-        TEST_CHECK(max_abs_diff_c32_vs_c64(half32, ArrayRef<Complex64>(ref32).slice(0, half_bins)) < 1e-4);
+        TEST_CHECK(max_abs_diff_c32_vs_c64(half32, ArrayRef<c64>(ref32).slice(0, half_bins)) < 1e-4);
 
         Array<f32> rec32(n);
         irfft_1d(half32, rec32, n);
@@ -478,13 +478,13 @@ void test_real_fft_and_irfft() {
     // Zero-padded odd/even real input into pow2 fft_1d_real (exercises packed half-length zero-pad path)
     for (usize src_len : {usize{7}, usize{8}, usize{9}}) {
         Array<f64> r_short(src_len);
-        Array<Complex64> c_padded(32, Complex64(0.0, 0.0));
+        Array<c64> c_padded(32, c64(0.0, 0.0));
         for (usize i = 0; i < src_len; ++i) {
             r_short[i] = rng.next_f64();
-            c_padded[i] = Complex64(r_short[i], 0.0);
+            c_padded[i] = c64(r_short[i], 0.0);
         }
-        const Array<Complex64> ref = naive_dft(c_padded, FftDirection::Forward);
-        Array<Complex64> got(32);
+        const Array<c64> ref = naive_dft(c_padded, FftDirection::Forward);
+        Array<c64> got(32);
         fft_1d_real(r_short, got);
         TEST_CHECK(max_abs_diff_c64(got, ref) < 1e-11);
     }
@@ -542,26 +542,26 @@ void test_plans_arena_and_zero_exec_allocations() {
     TEST_CHECK(cloned_blue.size() == 127 && cloned_blue.allocator() == custom_arena.allocator());
 
     // Pre-allocate work buffers before installing the counting default allocator
-    Array<Complex64> c512(512), c512_out(512);
+    Array<c64> c512(512), c512_out(512);
     Array<f64> r512(512), r512_out(512);
-    Array<Complex64> h512(257);
+    Array<c64> h512(257);
     for (usize i = 0; i < 512; ++i) {
         r512[i] = rng.next_f64();
-        c512[i] = Complex64(r512[i], rng.next_f64());
+        c512[i] = c64(r512[i], rng.next_f64());
     }
 
-    Array<Complex64> c127(127), c127_orig(127);
+    Array<c64> c127(127), c127_orig(127);
     Array<f64> r127(127), r127_out(127);
-    Array<Complex64> h127(64);
+    Array<c64> h127(64);
     for (usize i = 0; i < 127; ++i) {
         r127[i] = rng.next_f64();
-        c127[i] = Complex64(r127[i], rng.next_f64());
+        c127[i] = c64(r127[i], rng.next_f64());
         c127_orig[i] = c127[i];
     }
 
-    Array<Complex32> c256(256), c256_orig(256);
+    Array<c32> c256(256), c256_orig(256);
     for (usize i = 0; i < 256; ++i) {
-        c256[i] = Complex32(rng.next_f32(), rng.next_f32());
+        c256[i] = c32(rng.next_f32(), rng.next_f32());
         c256_orig[i] = c256[i];
     }
 
@@ -612,15 +612,15 @@ void test_strided_nd_batches() {
     const usize dims[3] = {4, 6, 5};
     const usize total = dims[0] * dims[1] * dims[2];
 
-    Array<Complex64> tensor64(total);
-    Array<Complex32> tensor32(total);
+    Array<c64> tensor64(total);
+    Array<c32> tensor32(total);
     Array<f64> rtensor64(total);
     Array<f32> rtensor32(total);
     for (usize i = 0; i < total; ++i) {
         const f64 re = rng.next_f64();
         const f64 im = rng.next_f64();
-        tensor64[i] = Complex64(re, im);
-        tensor32[i] = Complex32(static_cast<f32>(re), static_cast<f32>(im));
+        tensor64[i] = c64(re, im);
+        tensor32[i] = c32(static_cast<f32>(re), static_cast<f32>(im));
         rtensor64[i] = re;
         rtensor32[i] = static_cast<f32>(re);
     }
@@ -640,23 +640,23 @@ void test_strided_nd_batches() {
                 out_dims[axis] = target_n;
                 const usize out_total = out_dims[0] * out_dims[1] * out_dims[2];
 
-                Array<Complex64> batch_out64(out_total);
+                Array<c64> batch_out64(out_total);
                 fft_batch(tensor64, batch_out64, layout, FftDirection::Forward);
 
-                Array<Complex32> batch_out32(out_total);
+                Array<c32> batch_out32(out_total);
                 fft_batch(tensor32, batch_out32, layout, FftDirection::Forward);
 
-                Array<Complex64> batch_real_out64(out_total);
+                Array<c64> batch_real_out64(out_total);
                 fft_batch_real(rtensor64, batch_real_out64, layout);
 
                 // Verify every fiber against 1D fft_1d / fft_1d_real
                 const usize use_len = (axis_len < target_n) ? axis_len : target_n;
-                Array<Complex64> slice_in(axis_len);
-                Array<Complex64> slice_exp(target_n);
-                Array<Complex64> slice_got(target_n);
+                Array<c64> slice_in(axis_len);
+                Array<c64> slice_exp(target_n);
+                Array<c64> slice_got(target_n);
                 Array<f64> rslice_in(axis_len);
-                Array<Complex64> rslice_exp(target_n);
-                Array<Complex64> rslice_got(target_n);
+                Array<c64> rslice_exp(target_n);
+                Array<c64> rslice_got(target_n);
 
                 for (usize o = 0; o < layout.outer_count; ++o) {
                     for (usize i = 0; i < layout.inner_count; ++i) {
@@ -681,11 +681,11 @@ void test_strided_nd_batches() {
 
                 // When target_n == axis_len, verify full C2C, RFFT/IRFFT, and Symmetric IFFT round-trips!
                 if (target_n == axis_len) {
-                    Array<Complex64> inv_out64(total);
+                    Array<c64> inv_out64(total);
                     ifft_batch(batch_out64, inv_out64, layout);
                     TEST_CHECK(max_abs_diff_c64(inv_out64, tensor64) < 1e-11);
 
-                    Array<Complex32> inv_out32(total);
+                    Array<c32> inv_out32(total);
                     ifft_batch(batch_out32, inv_out32, layout);
                     TEST_CHECK(max_abs_diff_c32(inv_out32, tensor32) < 2e-5);
 
@@ -706,13 +706,13 @@ void test_strided_nd_batches() {
                         col_major ? FftBatchLayout::from_col_major(half_dims, axis, axis_len, axis_len)
                                   : FftBatchLayout::from_row_major(half_dims, axis, axis_len, axis_len);
 
-                    Array<Complex64> half_spec64(half_total);
+                    Array<c64> half_spec64(half_total);
                     rfft_batch(rtensor64, half_spec64, rfft_layout);
                     Array<f64> rfft_rec64(total);
                     irfft_batch(half_spec64, rfft_rec64, irfft_layout);
                     TEST_CHECK(max_abs_diff_f64(rfft_rec64, rtensor64) < 1e-11);
 
-                    Array<Complex32> half_spec32(half_total);
+                    Array<c32> half_spec32(half_total);
                     rfft_batch(rtensor32, half_spec32, rfft_layout);
                     Array<f32> rfft_rec32(total);
                     irfft_batch(half_spec32, rfft_rec32, irfft_layout);
@@ -740,7 +740,7 @@ void test_std_complex_interop() {
         orig32[i] = buf32[i];
     }
 
-    const Complex64 converted = from_std_complex(buf64[0]);
+    const c64 converted = from_std_complex(buf64[0]);
     TEST_CHECK(to_std_complex(converted) == buf64[0]);
 
     fft_1d_inplace(std::span<std::complex<double>>(buf64, kLen));
@@ -753,8 +753,8 @@ void test_std_complex_interop() {
     ifft_1d(std::span<const std::complex<float>>(spec32, kLen), std::span<std::complex<float>>(rec32, kLen));
     TEST_CHECK(max_abs_diff_c32(as_complex_ref(rec32, kLen), as_complex_ref(orig32, kLen)) < 1e-5);
 
-    Array<Complex64> keel_arr(8, Complex64(1.25, -0.5));
-    auto std_span = to_std_complex_span(MutArrayRef<Complex64>(keel_arr));
+    Array<c64> keel_arr(8, c64(1.25, -0.5));
+    auto std_span = to_std_complex_span(MutArrayRef<c64>(keel_arr));
     TEST_CHECK(std_span.size() == 8 && std_span[0] == std::complex<double>(1.25, -0.5));
 }
 

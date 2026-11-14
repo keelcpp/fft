@@ -78,12 +78,12 @@ void stockham_body(Cplx* x, Cplx* work, usize n, const Cplx* w_fwd, T* stage_wr,
     }
 }
 
-void StockhamF64(Complex64* x, Complex64* work, usize n, const Complex64* w_fwd, f64* stage_wr, f64* stage_wi) {
-    stockham_body<f64, Complex64>(x, work, n, w_fwd, stage_wr, stage_wi);
+void StockhamF64(c64* x, c64* work, usize n, const c64* w_fwd, f64* stage_wr, f64* stage_wi) {
+    stockham_body<f64, c64>(x, work, n, w_fwd, stage_wr, stage_wi);
 }
 
-void StockhamF32(Complex32* x, Complex32* work, usize n, const Complex32* w_fwd, f32* stage_wr, f32* stage_wi) {
-    stockham_body<f32, Complex32>(x, work, n, w_fwd, stage_wr, stage_wi);
+void StockhamF32(c32* x, c32* work, usize n, const c32* w_fwd, f32* stage_wr, f32* stage_wi) {
+    stockham_body<f32, c32>(x, work, n, w_fwd, stage_wr, stage_wi);
 }
 
 } // namespace HWY_NAMESPACE
@@ -97,19 +97,19 @@ namespace keel::detail {
 HWY_EXPORT(StockhamF64);
 HWY_EXPORT(StockhamF32);
 
-void hwy_stockham_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void hwy_stockham_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
-    Complex64* work = scratch.alloc<Complex64>(n);
+    c64* work = scratch.alloc<c64>(n);
     f64* stage_wr = scratch.alloc<f64>(n >> 1);
     f64* stage_wi = scratch.alloc<f64>(n >> 1);
     HWY_DYNAMIC_DISPATCH(StockhamF64)(buf, work, n, w_fwd, stage_wr, stage_wi);
 }
 
-void hwy_stockham_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void hwy_stockham_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
-    Complex32* work = scratch.alloc<Complex32>(n);
+    c32* work = scratch.alloc<c32>(n);
     f32* stage_wr = scratch.alloc<f32>(n >> 1);
     f32* stage_wi = scratch.alloc<f32>(n >> 1);
     HWY_DYNAMIC_DISPATCH(StockhamF32)(buf, work, n, w_fwd, stage_wr, stage_wi);

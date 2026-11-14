@@ -73,19 +73,19 @@ private:
 };
 
 // Unit-stride RFFT/IRFFT twist helpers (dispatched to Highway SIMD when enabled, scalar portable otherwise).
-void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* dst) noexcept;
-void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* dst) noexcept;
+void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* dst) noexcept;
+void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* dst) noexcept;
 
-void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* half_dst) noexcept;
-void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* half_dst) noexcept;
+void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* half_dst) noexcept;
+void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* half_dst) noexcept;
 
-void irfft_untwist_conj_unit_stride(const Complex64* half_src, usize n, const Complex64* w_full, f64* z_re,
+void irfft_untwist_conj_unit_stride(const c64* half_src, usize n, const c64* w_full, f64* z_re,
                                     f64* z_im) noexcept;
-void irfft_untwist_conj_unit_stride(const Complex32* half_src, usize n, const Complex32* w_full, f32* z_re,
+void irfft_untwist_conj_unit_stride(const c32* half_src, usize n, const c32* w_full, f32* z_re,
                                     f32* z_im) noexcept;
 
 void irfft_store_interleaved_unit_stride(const f64* z_re, const f64* z_im, usize half, f64 post_scale,
@@ -94,26 +94,26 @@ void irfft_store_interleaved_unit_stride(const f32* z_re, const f32* z_im, usize
                                          f32* real_dst) noexcept;
 
 #if defined(KEEL_FFT_WITH_HIGHWAY)
-void hwy_radix2_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix2_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix2_inplace(c64* buf, usize n, const c64* w_fwd) noexcept;
+void hwy_radix2_inplace(c32* buf, usize n, const c32* w_fwd) noexcept;
 
-void hwy_radix4_pow4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix4_pow4_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix4_pow4_inplace(c64* buf, usize n, const c64* w_fwd) noexcept;
+void hwy_radix4_pow4_inplace(c32* buf, usize n, const c32* w_fwd) noexcept;
 
-void hwy_stockham_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept;
-void hwy_stockham_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept;
+void hwy_stockham_inplace(c64* buf, usize n, const c64* w_fwd) noexcept;
+void hwy_stockham_inplace(c32* buf, usize n, const c32* w_fwd) noexcept;
 
-void hwy_radix2_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix2_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix2_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept;
+void hwy_radix2_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept;
 
-void hwy_radix2_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix2_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix2_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_fwd) noexcept;
+void hwy_radix2_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept;
 
-void hwy_radix4_pow4_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix4_pow4_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix4_pow4_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept;
+void hwy_radix4_pow4_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept;
 
-void hwy_radix4_pow4_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) noexcept;
-void hwy_radix4_pow4_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w_fwd) noexcept;
+void hwy_radix4_pow4_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_fwd) noexcept;
+void hwy_radix4_pow4_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept;
 #endif
 
 } // namespace keel::detail

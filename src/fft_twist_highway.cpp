@@ -174,30 +174,30 @@ void irfft_store_interleaved_body(const T* z_re, const T* z_im, usize half, T po
     }
 }
 
-void RfftTwistFullF64(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale, Complex64* dst) {
-    rfft_twist_body<f64, Complex64, true>(z_re, z_im, n, w_full, scale, dst);
+void RfftTwistFullF64(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale, c64* dst) {
+    rfft_twist_body<f64, c64, true>(z_re, z_im, n, w_full, scale, dst);
 }
 
-void RfftTwistFullF32(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale, Complex32* dst) {
-    rfft_twist_body<f32, Complex32, true>(z_re, z_im, n, w_full, scale, dst);
+void RfftTwistFullF32(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale, c32* dst) {
+    rfft_twist_body<f32, c32, true>(z_re, z_im, n, w_full, scale, dst);
 }
 
-void RfftTwistHalfF64(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                      Complex64* half_dst) {
-    rfft_twist_body<f64, Complex64, false>(z_re, z_im, n, w_full, scale, half_dst);
+void RfftTwistHalfF64(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                      c64* half_dst) {
+    rfft_twist_body<f64, c64, false>(z_re, z_im, n, w_full, scale, half_dst);
 }
 
-void RfftTwistHalfF32(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                      Complex32* half_dst) {
-    rfft_twist_body<f32, Complex32, false>(z_re, z_im, n, w_full, scale, half_dst);
+void RfftTwistHalfF32(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                      c32* half_dst) {
+    rfft_twist_body<f32, c32, false>(z_re, z_im, n, w_full, scale, half_dst);
 }
 
-void IrfftUntwistConjF64(const Complex64* half_src, usize n, const Complex64* w_full, f64* z_re, f64* z_im) {
-    irfft_untwist_conj_body<f64, Complex64>(half_src, n, w_full, z_re, z_im);
+void IrfftUntwistConjF64(const c64* half_src, usize n, const c64* w_full, f64* z_re, f64* z_im) {
+    irfft_untwist_conj_body<f64, c64>(half_src, n, w_full, z_re, z_im);
 }
 
-void IrfftUntwistConjF32(const Complex32* half_src, usize n, const Complex32* w_full, f32* z_re, f32* z_im) {
-    irfft_untwist_conj_body<f32, Complex32>(half_src, n, w_full, z_re, z_im);
+void IrfftUntwistConjF32(const c32* half_src, usize n, const c32* w_full, f32* z_re, f32* z_im) {
+    irfft_untwist_conj_body<f32, c32>(half_src, n, w_full, z_re, z_im);
 }
 
 void IrfftStoreInterleavedF64(const f64* z_re, const f64* z_im, usize half, f64 post_scale, f64* real_dst) {
@@ -225,32 +225,32 @@ HWY_EXPORT(IrfftUntwistConjF32);
 HWY_EXPORT(IrfftStoreInterleavedF64);
 HWY_EXPORT(IrfftStoreInterleavedF32);
 
-void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* dst) noexcept {
+void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* dst) noexcept {
     HWY_DYNAMIC_DISPATCH(RfftTwistFullF64)(z_re, z_im, n, w_full, scale, dst);
 }
 
-void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* dst) noexcept {
+void rfft_twist_full_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* dst) noexcept {
     HWY_DYNAMIC_DISPATCH(RfftTwistFullF32)(z_re, z_im, n, w_full, scale, dst);
 }
 
-void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const Complex64* w_full, f64 scale,
-                                 Complex64* half_dst) noexcept {
+void rfft_twist_half_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
+                                 c64* half_dst) noexcept {
     HWY_DYNAMIC_DISPATCH(RfftTwistHalfF64)(z_re, z_im, n, w_full, scale, half_dst);
 }
 
-void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const Complex32* w_full, f32 scale,
-                                 Complex32* half_dst) noexcept {
+void rfft_twist_half_unit_stride(const f32* z_re, const f32* z_im, usize n, const c32* w_full, f32 scale,
+                                 c32* half_dst) noexcept {
     HWY_DYNAMIC_DISPATCH(RfftTwistHalfF32)(z_re, z_im, n, w_full, scale, half_dst);
 }
 
-void irfft_untwist_conj_unit_stride(const Complex64* half_src, usize n, const Complex64* w_full, f64* z_re,
+void irfft_untwist_conj_unit_stride(const c64* half_src, usize n, const c64* w_full, f64* z_re,
                                     f64* z_im) noexcept {
     HWY_DYNAMIC_DISPATCH(IrfftUntwistConjF64)(half_src, n, w_full, z_re, z_im);
 }
 
-void irfft_untwist_conj_unit_stride(const Complex32* half_src, usize n, const Complex32* w_full, f32* z_re,
+void irfft_untwist_conj_unit_stride(const c32* half_src, usize n, const c32* w_full, f32* z_re,
                                     f32* z_im) noexcept {
     HWY_DYNAMIC_DISPATCH(IrfftUntwistConjF32)(half_src, n, w_full, z_re, z_im);
 }

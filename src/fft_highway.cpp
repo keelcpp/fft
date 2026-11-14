@@ -19,7 +19,7 @@ constexpr usize kRadix4SoaThresholdF32 = usize{1} << 13; // 8192
 
 } // namespace
 
-void fft_radix2_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix2_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n) && n >= kRadix4SoaThresholdF64) {
@@ -31,7 +31,7 @@ void fft_radix2_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcep
     }
 }
 
-void fft_radix2_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix2_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n) && n >= kRadix4SoaThresholdF32) {
@@ -43,7 +43,7 @@ void fft_radix2_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcep
     }
 }
 
-void fft_radix4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix4_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n)) {
@@ -53,7 +53,7 @@ void fft_radix4_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcep
     }
 }
 
-void fft_radix4_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix4_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n)) {
@@ -63,31 +63,31 @@ void fft_radix4_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcep
     }
 }
 
-void fft_stockham_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_stockham_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     detail::hwy_stockham_inplace(buf, n, w_fwd);
 }
 
-void fft_stockham_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_stockham_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     detail::hwy_stockham_inplace(buf, n, w_fwd);
 }
 
-void fft_radix2_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix2_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     detail::hwy_radix2_soa_inplace(buf, n, w_fwd);
 }
 
-void fft_radix2_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix2_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     detail::hwy_radix2_soa_inplace(buf, n, w_fwd);
 }
 
-void fft_radix4_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void fft_radix4_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n)) {
@@ -97,7 +97,7 @@ void fft_radix4_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noe
     }
 }
 
-void fft_radix4_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void fft_radix4_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
     if (detail::is_pow4(n)) {
@@ -107,7 +107,7 @@ void fft_radix4_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noe
     }
 }
 
-void fft_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) noexcept {
+void fft_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
 #if !defined(__EMSCRIPTEN__)
@@ -119,7 +119,7 @@ void fft_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) n
     detail::hwy_radix2_soa_stages_inplace(re, im, n, w_fwd);
 }
 
-void fft_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w_fwd) noexcept {
+void fft_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     KEEL_ASSERT(detail::is_pow2(n));
 #if !defined(__EMSCRIPTEN__)

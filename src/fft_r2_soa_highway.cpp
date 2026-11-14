@@ -94,22 +94,22 @@ void radix2_soa_aos_body(Cplx* buf, usize n, const Cplx* w_fwd, T* re, T* im, T*
     }
 }
 
-void Radix2SoAStagesF64(f64* re, f64* im, usize n, const Complex64* w_fwd, f64* stage_wr, f64* stage_wi) {
-    radix2_soa_stages_body<f64, Complex64>(re, im, n, w_fwd, stage_wr, stage_wi);
+void Radix2SoAStagesF64(f64* re, f64* im, usize n, const c64* w_fwd, f64* stage_wr, f64* stage_wi) {
+    radix2_soa_stages_body<f64, c64>(re, im, n, w_fwd, stage_wr, stage_wi);
 }
 
-void Radix2SoAF64(Complex64* buf, usize n, const Complex64* w_fwd, f64* re, f64* im, f64* stage_wr,
+void Radix2SoAF64(c64* buf, usize n, const c64* w_fwd, f64* re, f64* im, f64* stage_wr,
                   f64* stage_wi) {
-    radix2_soa_aos_body<f64, Complex64>(buf, n, w_fwd, re, im, stage_wr, stage_wi);
+    radix2_soa_aos_body<f64, c64>(buf, n, w_fwd, re, im, stage_wr, stage_wi);
 }
 
-void Radix2SoAStagesF32(f32* re, f32* im, usize n, const Complex32* w_fwd, f32* stage_wr, f32* stage_wi) {
-    radix2_soa_stages_body<f32, Complex32>(re, im, n, w_fwd, stage_wr, stage_wi);
+void Radix2SoAStagesF32(f32* re, f32* im, usize n, const c32* w_fwd, f32* stage_wr, f32* stage_wi) {
+    radix2_soa_stages_body<f32, c32>(re, im, n, w_fwd, stage_wr, stage_wi);
 }
 
-void Radix2SoAF32(Complex32* buf, usize n, const Complex32* w_fwd, f32* re, f32* im, f32* stage_wr,
+void Radix2SoAF32(c32* buf, usize n, const c32* w_fwd, f32* re, f32* im, f32* stage_wr,
                   f32* stage_wi) {
-    radix2_soa_aos_body<f32, Complex32>(buf, n, w_fwd, re, im, stage_wr, stage_wi);
+    radix2_soa_aos_body<f32, c32>(buf, n, w_fwd, re, im, stage_wr, stage_wi);
 }
 
 } // namespace HWY_NAMESPACE
@@ -125,7 +125,7 @@ HWY_EXPORT(Radix2SoAF64);
 HWY_EXPORT(Radix2SoAStagesF32);
 HWY_EXPORT(Radix2SoAF32);
 
-void hwy_radix2_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w_fwd) noexcept {
+void hwy_radix2_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     f64* stage_wr = scratch.alloc<f64>(n >> 1);
@@ -133,7 +133,7 @@ void hwy_radix2_soa_stages_inplace(f64* re, f64* im, usize n, const Complex64* w
     HWY_DYNAMIC_DISPATCH(Radix2SoAStagesF64)(re, im, n, w_fwd, stage_wr, stage_wi);
 }
 
-void hwy_radix2_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noexcept {
+void hwy_radix2_soa_inplace(c64* buf, usize n, const c64* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     f64* re = scratch.alloc<f64>(n);
@@ -143,7 +143,7 @@ void hwy_radix2_soa_inplace(Complex64* buf, usize n, const Complex64* w_fwd) noe
     HWY_DYNAMIC_DISPATCH(Radix2SoAF64)(buf, n, w_fwd, re, im, stage_wr, stage_wi);
 }
 
-void hwy_radix2_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w_fwd) noexcept {
+void hwy_radix2_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     f32* stage_wr = scratch.alloc<f32>(n >> 1);
@@ -151,7 +151,7 @@ void hwy_radix2_soa_stages_inplace(f32* re, f32* im, usize n, const Complex32* w
     HWY_DYNAMIC_DISPATCH(Radix2SoAStagesF32)(re, im, n, w_fwd, stage_wr, stage_wi);
 }
 
-void hwy_radix2_soa_inplace(Complex32* buf, usize n, const Complex32* w_fwd) noexcept {
+void hwy_radix2_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     if (n <= 1) return;
     ScratchScope scratch;
     f32* re = scratch.alloc<f32>(n);

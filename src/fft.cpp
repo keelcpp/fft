@@ -14,7 +14,7 @@ namespace keel {
 
 namespace fft_kernels {
 
-void fill_twiddles_f64(MutArrayRef<Complex64> w, usize n, FftDirection dir) noexcept {
+void fill_twiddles_f64(MutArrayRef<c64> w, usize n, FftDirection dir) noexcept {
     const usize half = n >> 1;
     if (half == 0) return;
     KEEL_ASSERT(w.size() >= half);
@@ -22,11 +22,11 @@ void fill_twiddles_f64(MutArrayRef<Complex64> w, usize n, FftDirection dir) noex
     const f64 base = sign * 2.0 * detail::kPi / static_cast<f64>(n);
     for (usize k = 0; k < half; ++k) {
         const f64 angle = base * static_cast<f64>(k);
-        w[k] = Complex64(std::cos(angle), std::sin(angle));
+        w[k] = c64(std::cos(angle), std::sin(angle));
     }
 }
 
-void fill_twiddles_f32(MutArrayRef<Complex32> w, usize n, FftDirection dir) noexcept {
+void fill_twiddles_f32(MutArrayRef<c32> w, usize n, FftDirection dir) noexcept {
     const usize half = n >> 1;
     if (half == 0) return;
     KEEL_ASSERT(w.size() >= half);
@@ -34,7 +34,7 @@ void fill_twiddles_f32(MutArrayRef<Complex32> w, usize n, FftDirection dir) noex
     const f64 base = sign * 2.0 * detail::kPi / static_cast<f64>(n);
     for (usize k = 0; k < half; ++k) {
         const f64 angle = base * static_cast<f64>(k);
-        w[k] = Complex32(static_cast<f32>(std::cos(angle)), static_cast<f32>(std::sin(angle)));
+        w[k] = c32(static_cast<f32>(std::cos(angle)), static_cast<f32>(std::sin(angle)));
     }
 }
 
@@ -135,7 +135,7 @@ template <typename T>
 
 template <typename Cplx>
 void fill_twiddles_generic(MutArrayRef<Cplx> w, usize n, FftDirection dir) noexcept {
-    if constexpr (IsSame<Cplx, Complex64>) {
+    if constexpr (IsSame<Cplx, c64>) {
         fft_kernels::fill_twiddles_f64(w, n, dir);
     } else {
         fft_kernels::fill_twiddles_f32(w, n, dir);
@@ -722,9 +722,9 @@ void exec_plan_batch_symmetric_ifft(const PlanView<T, Cplx>& p, ArrayRef<Cplx> s
     }
 }
 
-[[nodiscard]] PlanView<f64, Complex64> make_view(const FftPlan1D& plan, usize conv_m, const Complex64* w_half,
-                                                 const Complex64* chirp, const Complex64* v_freq) noexcept {
-    return PlanView<f64, Complex64>{
+[[nodiscard]] PlanView<f64, c64> make_view(const FftPlan1D& plan, usize conv_m, const c64* w_half,
+                                                 const c64* chirp, const c64* v_freq) noexcept {
+    return PlanView<f64, c64>{
         .n = plan.size(),
         .conv_m = conv_m,
         .is_pow2 = plan.is_power_of_two(),
@@ -735,9 +735,9 @@ void exec_plan_batch_symmetric_ifft(const PlanView<T, Cplx>& p, ArrayRef<Cplx> s
     };
 }
 
-[[nodiscard]] PlanView<f32, Complex32> make_view(const FftPlan1DF32& plan, usize conv_m, const Complex32* w_half,
-                                                 const Complex32* chirp, const Complex32* v_freq) noexcept {
-    return PlanView<f32, Complex32>{
+[[nodiscard]] PlanView<f32, c32> make_view(const FftPlan1DF32& plan, usize conv_m, const c32* w_half,
+                                                 const c32* chirp, const c32* v_freq) noexcept {
+    return PlanView<f32, c32>{
         .n = plan.size(),
         .conv_m = conv_m,
         .is_pow2 = plan.is_power_of_two(),
@@ -790,7 +790,7 @@ Result<FftPlan1D> FftPlan1D::create(usize n, Allocator* alloc) {
     }
     FftPlan1D plan;
     plan.m_n = n;
-    init_plan_arrays<f64, Complex64>(n, alloc, plan.m_conv_m, plan.m_is_pow2, plan.m_twiddles, plan.m_half_twiddles,
+    init_plan_arrays<f64, c64>(n, alloc, plan.m_conv_m, plan.m_is_pow2, plan.m_twiddles, plan.m_half_twiddles,
                                      plan.m_chirp, plan.m_v_freq);
     return plan;
 }
@@ -808,67 +808,67 @@ FftPlan1D FftPlan1D::clone(Allocator* alloc) const {
     return copy;
 }
 
-void FftPlan1D::exec_inplace(MutArrayRef<Complex64> buf, FftDirection dir, FftNormalization norm) const noexcept {
+void FftPlan1D::exec_inplace(MutArrayRef<c64> buf, FftDirection dir, FftNormalization norm) const noexcept {
     KEEL_ASSERT(m_n > 0 && buf.size() == m_n);
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
-    exec_c2c_core<f64, Complex64>(view, buf.data(), dir, norm, nullptr);
+    exec_c2c_core<f64, c64>(view, buf.data(), dir, norm, nullptr);
 }
 
-void FftPlan1D::exec(ArrayRef<Complex64> src, MutArrayRef<Complex64> dst, FftDirection dir,
+void FftPlan1D::exec(ArrayRef<c64> src, MutArrayRef<c64> dst, FftDirection dir,
                      FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_1d(view, src, dst, dir, norm);
 }
 
-void FftPlan1D::exec_rfft(ArrayRef<f64> real_src, MutArrayRef<Complex64> half_spectrum_dst,
+void FftPlan1D::exec_rfft(ArrayRef<f64> real_src, MutArrayRef<c64> half_spectrum_dst,
                           FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_rfft_1d(view, real_src, half_spectrum_dst, false, norm);
 }
 
-void FftPlan1D::exec_real_to_complex(ArrayRef<f64> real_src, MutArrayRef<Complex64> full_dst,
+void FftPlan1D::exec_real_to_complex(ArrayRef<f64> real_src, MutArrayRef<c64> full_dst,
                                      FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_rfft_1d(view, real_src, full_dst, true, norm);
 }
 
-void FftPlan1D::exec_irfft(ArrayRef<Complex64> half_spectrum_src, MutArrayRef<f64> real_dst,
+void FftPlan1D::exec_irfft(ArrayRef<c64> half_spectrum_src, MutArrayRef<f64> real_dst,
                            FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_irfft_1d(view, half_spectrum_src, real_dst, norm);
 }
 
-void FftPlan1D::exec_symmetric_ifft(ArrayRef<Complex64> src, MutArrayRef<f64> real_dst,
+void FftPlan1D::exec_symmetric_ifft(ArrayRef<c64> src, MutArrayRef<f64> real_dst,
                                     FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_symmetric_ifft_1d(view, src, real_dst, norm);
 }
 
-void FftPlan1D::exec_batch(ArrayRef<Complex64> src, MutArrayRef<Complex64> dst, const FftBatchLayout& layout,
+void FftPlan1D::exec_batch(ArrayRef<c64> src, MutArrayRef<c64> dst, const FftBatchLayout& layout,
                            FftDirection dir, FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_c2c(view, src, dst, layout, dir, norm);
 }
 
-void FftPlan1D::exec_batch_real(ArrayRef<f64> src, MutArrayRef<Complex64> dst, const FftBatchLayout& layout,
+void FftPlan1D::exec_batch_real(ArrayRef<f64> src, MutArrayRef<c64> dst, const FftBatchLayout& layout,
                                 FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_rfft(view, src, dst, layout, true, norm);
 }
 
-void FftPlan1D::exec_batch_rfft(ArrayRef<f64> src, MutArrayRef<Complex64> half_dst, const FftBatchLayout& layout,
+void FftPlan1D::exec_batch_rfft(ArrayRef<f64> src, MutArrayRef<c64> half_dst, const FftBatchLayout& layout,
                                 FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_rfft(view, src, half_dst, layout, false, norm);
 }
 
-void FftPlan1D::exec_batch_irfft(ArrayRef<Complex64> half_src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
+void FftPlan1D::exec_batch_irfft(ArrayRef<c64> half_src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
                                  FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_irfft(view, half_src, dst, layout, norm);
 }
 
-void FftPlan1D::exec_batch_symmetric_ifft(ArrayRef<Complex64> src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
+void FftPlan1D::exec_batch_symmetric_ifft(ArrayRef<c64> src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
                                           FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_symmetric_ifft(view, src, dst, layout, norm);
@@ -884,7 +884,7 @@ Result<FftPlan1DF32> FftPlan1DF32::create(usize n, Allocator* alloc) {
     }
     FftPlan1DF32 plan;
     plan.m_n = n;
-    init_plan_arrays<f32, Complex32>(n, alloc, plan.m_conv_m, plan.m_is_pow2, plan.m_twiddles, plan.m_half_twiddles,
+    init_plan_arrays<f32, c32>(n, alloc, plan.m_conv_m, plan.m_is_pow2, plan.m_twiddles, plan.m_half_twiddles,
                                      plan.m_chirp, plan.m_v_freq);
     return plan;
 }
@@ -902,67 +902,67 @@ FftPlan1DF32 FftPlan1DF32::clone(Allocator* alloc) const {
     return copy;
 }
 
-void FftPlan1DF32::exec_inplace(MutArrayRef<Complex32> buf, FftDirection dir, FftNormalization norm) const noexcept {
+void FftPlan1DF32::exec_inplace(MutArrayRef<c32> buf, FftDirection dir, FftNormalization norm) const noexcept {
     KEEL_ASSERT(m_n > 0 && buf.size() == m_n);
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
-    exec_c2c_core<f32, Complex32>(view, buf.data(), dir, norm, nullptr);
+    exec_c2c_core<f32, c32>(view, buf.data(), dir, norm, nullptr);
 }
 
-void FftPlan1DF32::exec(ArrayRef<Complex32> src, MutArrayRef<Complex32> dst, FftDirection dir,
+void FftPlan1DF32::exec(ArrayRef<c32> src, MutArrayRef<c32> dst, FftDirection dir,
                         FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_1d(view, src, dst, dir, norm);
 }
 
-void FftPlan1DF32::exec_rfft(ArrayRef<f32> real_src, MutArrayRef<Complex32> half_spectrum_dst,
+void FftPlan1DF32::exec_rfft(ArrayRef<f32> real_src, MutArrayRef<c32> half_spectrum_dst,
                              FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_rfft_1d(view, real_src, half_spectrum_dst, false, norm);
 }
 
-void FftPlan1DF32::exec_real_to_complex(ArrayRef<f32> real_src, MutArrayRef<Complex32> full_dst,
+void FftPlan1DF32::exec_real_to_complex(ArrayRef<f32> real_src, MutArrayRef<c32> full_dst,
                                         FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_rfft_1d(view, real_src, full_dst, true, norm);
 }
 
-void FftPlan1DF32::exec_irfft(ArrayRef<Complex32> half_spectrum_src, MutArrayRef<f32> real_dst,
+void FftPlan1DF32::exec_irfft(ArrayRef<c32> half_spectrum_src, MutArrayRef<f32> real_dst,
                               FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_irfft_1d(view, half_spectrum_src, real_dst, norm);
 }
 
-void FftPlan1DF32::exec_symmetric_ifft(ArrayRef<Complex32> src, MutArrayRef<f32> real_dst,
+void FftPlan1DF32::exec_symmetric_ifft(ArrayRef<c32> src, MutArrayRef<f32> real_dst,
                                        FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_symmetric_ifft_1d(view, src, real_dst, norm);
 }
 
-void FftPlan1DF32::exec_batch(ArrayRef<Complex32> src, MutArrayRef<Complex32> dst, const FftBatchLayout& layout,
+void FftPlan1DF32::exec_batch(ArrayRef<c32> src, MutArrayRef<c32> dst, const FftBatchLayout& layout,
                               FftDirection dir, FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_c2c(view, src, dst, layout, dir, norm);
 }
 
-void FftPlan1DF32::exec_batch_real(ArrayRef<f32> src, MutArrayRef<Complex32> dst, const FftBatchLayout& layout,
+void FftPlan1DF32::exec_batch_real(ArrayRef<f32> src, MutArrayRef<c32> dst, const FftBatchLayout& layout,
                                    FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_rfft(view, src, dst, layout, true, norm);
 }
 
-void FftPlan1DF32::exec_batch_rfft(ArrayRef<f32> src, MutArrayRef<Complex32> half_dst, const FftBatchLayout& layout,
+void FftPlan1DF32::exec_batch_rfft(ArrayRef<f32> src, MutArrayRef<c32> half_dst, const FftBatchLayout& layout,
                                    FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_rfft(view, src, half_dst, layout, false, norm);
 }
 
-void FftPlan1DF32::exec_batch_irfft(ArrayRef<Complex32> half_src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
+void FftPlan1DF32::exec_batch_irfft(ArrayRef<c32> half_src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
                                     FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_irfft(view, half_src, dst, layout, norm);
 }
 
-void FftPlan1DF32::exec_batch_symmetric_ifft(ArrayRef<Complex32> src, MutArrayRef<f32> dst,
+void FftPlan1DF32::exec_batch_symmetric_ifft(ArrayRef<c32> src, MutArrayRef<f32> dst,
                                              const FftBatchLayout& layout, FftNormalization norm) const noexcept {
     const auto view = make_view(*this, m_conv_m, m_half_twiddles.data(), m_chirp.data(), m_v_freq.data());
     exec_plan_batch_symmetric_ifft(view, src, dst, layout, norm);
@@ -972,32 +972,32 @@ void FftPlan1DF32::exec_batch_symmetric_ifft(ArrayRef<Complex32> src, MutArrayRe
 // High-Level Stateless / Thread-Cached 1-D Transforms (f64 & f32)
 // ============================================================================
 
-void fft_1d_inplace(MutArrayRef<Complex64> buf, FftNormalization norm) noexcept {
+void fft_1d_inplace(MutArrayRef<c64> buf, FftNormalization norm) noexcept {
     if (buf.size() <= 1) return;
     cached_plan_f64(buf.size()).exec_inplace(buf, FftDirection::Forward, norm);
 }
 
-void ifft_1d_inplace(MutArrayRef<Complex64> buf, FftNormalization norm) noexcept {
+void ifft_1d_inplace(MutArrayRef<c64> buf, FftNormalization norm) noexcept {
     if (buf.size() <= 1) return;
     cached_plan_f64(buf.size()).exec_inplace(buf, FftDirection::Inverse, norm);
 }
 
-void fft_1d(ArrayRef<Complex64> src, MutArrayRef<Complex64> dst, FftNormalization norm) noexcept {
+void fft_1d(ArrayRef<c64> src, MutArrayRef<c64> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f64(dst.size()).exec(src, dst, FftDirection::Forward, norm);
 }
 
-void ifft_1d(ArrayRef<Complex64> src, MutArrayRef<Complex64> dst, FftNormalization norm) noexcept {
+void ifft_1d(ArrayRef<c64> src, MutArrayRef<c64> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f64(dst.size()).exec(src, dst, FftDirection::Inverse, norm);
 }
 
-void fft_1d_real(ArrayRef<f64> src, MutArrayRef<Complex64> dst, FftNormalization norm) noexcept {
+void fft_1d_real(ArrayRef<f64> src, MutArrayRef<c64> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f64(dst.size()).exec_real_to_complex(src, dst, norm);
 }
 
-void rfft_1d(ArrayRef<f64> src, MutArrayRef<Complex64> half_dst, FftNormalization norm) noexcept {
+void rfft_1d(ArrayRef<f64> src, MutArrayRef<c64> half_dst, FftNormalization norm) noexcept {
     if (src.empty()) {
         KEEL_ASSERT(half_dst.empty());
         return;
@@ -1005,7 +1005,7 @@ void rfft_1d(ArrayRef<f64> src, MutArrayRef<Complex64> half_dst, FftNormalizatio
     cached_plan_f64(src.size()).exec_rfft(src, half_dst, norm);
 }
 
-void irfft_1d(ArrayRef<Complex64> half_src, MutArrayRef<f64> dst, usize n, FftNormalization norm) noexcept {
+void irfft_1d(ArrayRef<c64> half_src, MutArrayRef<f64> dst, usize n, FftNormalization norm) noexcept {
     if (n == 0) {
         KEEL_ASSERT(dst.empty());
         return;
@@ -1014,37 +1014,37 @@ void irfft_1d(ArrayRef<Complex64> half_src, MutArrayRef<f64> dst, usize n, FftNo
     cached_plan_f64(n).exec_irfft(half_src, dst, norm);
 }
 
-void ifft_1d_symmetric(ArrayRef<Complex64> src, MutArrayRef<f64> dst, FftNormalization norm) noexcept {
+void ifft_1d_symmetric(ArrayRef<c64> src, MutArrayRef<f64> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f64(dst.size()).exec_symmetric_ifft(src, dst, norm);
 }
 
-void fft_1d_inplace(MutArrayRef<Complex32> buf, FftNormalization norm) noexcept {
+void fft_1d_inplace(MutArrayRef<c32> buf, FftNormalization norm) noexcept {
     if (buf.size() <= 1) return;
     cached_plan_f32(buf.size()).exec_inplace(buf, FftDirection::Forward, norm);
 }
 
-void ifft_1d_inplace(MutArrayRef<Complex32> buf, FftNormalization norm) noexcept {
+void ifft_1d_inplace(MutArrayRef<c32> buf, FftNormalization norm) noexcept {
     if (buf.size() <= 1) return;
     cached_plan_f32(buf.size()).exec_inplace(buf, FftDirection::Inverse, norm);
 }
 
-void fft_1d(ArrayRef<Complex32> src, MutArrayRef<Complex32> dst, FftNormalization norm) noexcept {
+void fft_1d(ArrayRef<c32> src, MutArrayRef<c32> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f32(dst.size()).exec(src, dst, FftDirection::Forward, norm);
 }
 
-void ifft_1d(ArrayRef<Complex32> src, MutArrayRef<Complex32> dst, FftNormalization norm) noexcept {
+void ifft_1d(ArrayRef<c32> src, MutArrayRef<c32> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f32(dst.size()).exec(src, dst, FftDirection::Inverse, norm);
 }
 
-void fft_1d_real(ArrayRef<f32> src, MutArrayRef<Complex32> dst, FftNormalization norm) noexcept {
+void fft_1d_real(ArrayRef<f32> src, MutArrayRef<c32> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f32(dst.size()).exec_real_to_complex(src, dst, norm);
 }
 
-void rfft_1d(ArrayRef<f32> src, MutArrayRef<Complex32> half_dst, FftNormalization norm) noexcept {
+void rfft_1d(ArrayRef<f32> src, MutArrayRef<c32> half_dst, FftNormalization norm) noexcept {
     if (src.empty()) {
         KEEL_ASSERT(half_dst.empty());
         return;
@@ -1052,7 +1052,7 @@ void rfft_1d(ArrayRef<f32> src, MutArrayRef<Complex32> half_dst, FftNormalizatio
     cached_plan_f32(src.size()).exec_rfft(src, half_dst, norm);
 }
 
-void irfft_1d(ArrayRef<Complex32> half_src, MutArrayRef<f32> dst, usize n, FftNormalization norm) noexcept {
+void irfft_1d(ArrayRef<c32> half_src, MutArrayRef<f32> dst, usize n, FftNormalization norm) noexcept {
     if (n == 0) {
         KEEL_ASSERT(dst.empty());
         return;
@@ -1061,7 +1061,7 @@ void irfft_1d(ArrayRef<Complex32> half_src, MutArrayRef<f32> dst, usize n, FftNo
     cached_plan_f32(n).exec_irfft(half_src, dst, norm);
 }
 
-void ifft_1d_symmetric(ArrayRef<Complex32> src, MutArrayRef<f32> dst, FftNormalization norm) noexcept {
+void ifft_1d_symmetric(ArrayRef<c32> src, MutArrayRef<f32> dst, FftNormalization norm) noexcept {
     if (dst.empty()) return;
     cached_plan_f32(dst.size()).exec_symmetric_ifft(src, dst, norm);
 }
@@ -1070,28 +1070,28 @@ void ifft_1d_symmetric(ArrayRef<Complex32> src, MutArrayRef<f32> dst, FftNormali
 // High-Level Batched / Strided Multi-Dimensional Transforms (f64 & f32)
 // ============================================================================
 
-void fft_batch(ArrayRef<Complex64> src, MutArrayRef<Complex64> dst, const FftBatchLayout& layout, FftDirection dir,
+void fft_batch(ArrayRef<c64> src, MutArrayRef<c64> dst, const FftBatchLayout& layout, FftDirection dir,
                FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f64(n).exec_batch(src, dst, layout, dir, norm);
 }
 
-void fft_batch_real(ArrayRef<f64> src, MutArrayRef<Complex64> dst, const FftBatchLayout& layout,
+void fft_batch_real(ArrayRef<f64> src, MutArrayRef<c64> dst, const FftBatchLayout& layout,
                     FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f64(n).exec_batch_real(src, dst, layout, norm);
 }
 
-void rfft_batch(ArrayRef<f64> src, MutArrayRef<Complex64> half_dst, const FftBatchLayout& layout,
+void rfft_batch(ArrayRef<f64> src, MutArrayRef<c64> half_dst, const FftBatchLayout& layout,
                 FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f64(n).exec_batch_rfft(src, half_dst, layout, norm);
 }
 
-void irfft_batch(ArrayRef<Complex64> half_src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
+void irfft_batch(ArrayRef<c64> half_src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
                  FftNormalization norm) noexcept {
     if (layout.outer_count == 0 || layout.inner_count == 0) return;
     const usize n = infer_irfft_batch_len(layout);
@@ -1099,35 +1099,35 @@ void irfft_batch(ArrayRef<Complex64> half_src, MutArrayRef<f64> dst, const FftBa
     cached_plan_f64(n).exec_batch_irfft(half_src, dst, layout, norm);
 }
 
-void ifft_batch_symmetric(ArrayRef<Complex64> src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
+void ifft_batch_symmetric(ArrayRef<c64> src, MutArrayRef<f64> dst, const FftBatchLayout& layout,
                           FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f64(n).exec_batch_symmetric_ifft(src, dst, layout, norm);
 }
 
-void fft_batch(ArrayRef<Complex32> src, MutArrayRef<Complex32> dst, const FftBatchLayout& layout, FftDirection dir,
+void fft_batch(ArrayRef<c32> src, MutArrayRef<c32> dst, const FftBatchLayout& layout, FftDirection dir,
                FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f32(n).exec_batch(src, dst, layout, dir, norm);
 }
 
-void fft_batch_real(ArrayRef<f32> src, MutArrayRef<Complex32> dst, const FftBatchLayout& layout,
+void fft_batch_real(ArrayRef<f32> src, MutArrayRef<c32> dst, const FftBatchLayout& layout,
                     FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f32(n).exec_batch_real(src, dst, layout, norm);
 }
 
-void rfft_batch(ArrayRef<f32> src, MutArrayRef<Complex32> half_dst, const FftBatchLayout& layout,
+void rfft_batch(ArrayRef<f32> src, MutArrayRef<c32> half_dst, const FftBatchLayout& layout,
                 FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
     cached_plan_f32(n).exec_batch_rfft(src, half_dst, layout, norm);
 }
 
-void irfft_batch(ArrayRef<Complex32> half_src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
+void irfft_batch(ArrayRef<c32> half_src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
                  FftNormalization norm) noexcept {
     if (layout.outer_count == 0 || layout.inner_count == 0) return;
     const usize n = infer_irfft_batch_len(layout);
@@ -1135,7 +1135,7 @@ void irfft_batch(ArrayRef<Complex32> half_src, MutArrayRef<f32> dst, const FftBa
     cached_plan_f32(n).exec_batch_irfft(half_src, dst, layout, norm);
 }
 
-void ifft_batch_symmetric(ArrayRef<Complex32> src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
+void ifft_batch_symmetric(ArrayRef<c32> src, MutArrayRef<f32> dst, const FftBatchLayout& layout,
                           FftNormalization norm) noexcept {
     const usize n = layout.effective_fft_len();
     if (n == 0 || layout.outer_count == 0 || layout.inner_count == 0) return;
