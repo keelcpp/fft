@@ -1,0 +1,17 @@
+@PACKAGE_INIT@
+
+include(CMakeFindDependencyMacro)
+find_dependency(keel)
+
+include("${CMAKE_CURRENT_LIST_DIR}/keel_fftTargets.cmake")
+
+if(@KEEL_FFT_WITH_HIGHWAY@)
+    find_dependency(hwy QUIET)
+    if(TARGET hwy::hwy)
+        set_property(TARGET keel::keel_fft APPEND PROPERTY INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:hwy::hwy>")
+    elseif(TARGET hwy)
+        set_property(TARGET keel::keel_fft APPEND PROPERTY INTERFACE_LINK_LIBRARIES "$<LINK_ONLY:hwy>")
+    endif()
+endif()
+
+check_required_components(keel_fft)
