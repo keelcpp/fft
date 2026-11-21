@@ -1,6 +1,6 @@
 #include "fft_internal.h"
 
-namespace keel::fft_kernels {
+namespace keel::fft::fft_kernels {
 
 namespace {
 
@@ -131,4 +131,4 @@ void fft_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcep
     detail::hwy_radix2_soa_stages_inplace(re, im, n, w_fwd);
 }
 
-} // namespace keel::fft_kernels
+} // namespace keel::fft::fft_kernels

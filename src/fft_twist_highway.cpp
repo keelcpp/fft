@@ -8,7 +8,7 @@
 #include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
-namespace keel::detail {
+namespace keel::fft::detail {
 namespace HWY_NAMESPACE {
 
 namespace hn = hwy::HWY_NAMESPACE;
@@ -209,12 +209,12 @@ void IrfftStoreInterleavedF32(const f32* z_re, const f32* z_im, usize half, f32 
 }
 
 } // namespace HWY_NAMESPACE
-} // namespace keel::detail
+} // namespace keel::fft::detail
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 HWY_EXPORT(RfftTwistFullF64);
 HWY_EXPORT(RfftTwistFullF32);
@@ -265,6 +265,6 @@ void irfft_store_interleaved_unit_stride(const f32* z_re, const f32* z_im, usize
     HWY_DYNAMIC_DISPATCH(IrfftStoreInterleavedF32)(z_re, z_im, half, post_scale, real_dst);
 }
 
-} // namespace keel::detail
+} // namespace keel::fft::detail
 
 #endif // HWY_ONCE

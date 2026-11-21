@@ -4,7 +4,7 @@
 #include "keel/bits.h"
 #include "keel/fft.h"
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 inline constexpr f64 kPi = 3.141592653589793238462643383279502884;
 
@@ -116,4 +116,4 @@ void hwy_radix4_pow4_soa_stages_inplace(f64* re, f64* im, usize n, const c64* w_
 void hwy_radix4_pow4_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcept;
 #endif
 
-} // namespace keel::detail
+} // namespace keel::fft::detail

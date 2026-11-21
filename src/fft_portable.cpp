@@ -1,6 +1,6 @@
 #include "fft_portable_impl.h"
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 void rfft_twist_full_unit_stride(const f64* z_re, const f64* z_im, usize n, const c64* w_full, f64 scale,
                                  c64* dst) noexcept {
@@ -42,9 +42,9 @@ void irfft_store_interleaved_unit_stride(const f32* z_re, const f32* z_im, usize
     portable_irfft_store_interleaved(z_re, z_im, half, post_scale, real_dst, 1);
 }
 
-} // namespace keel::detail
+} // namespace keel::fft::detail
 
-namespace keel::fft_kernels {
+namespace keel::fft::fft_kernels {
 
 namespace {
 
@@ -131,4 +131,4 @@ void fft_soa_stages_inplace(f32* re, f32* im, usize n, const c32* w_fwd) noexcep
     }
 }
 
-} // namespace keel::fft_kernels
+} // namespace keel::fft::fft_kernels

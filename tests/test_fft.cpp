@@ -7,6 +7,7 @@
 #include <cstdio>
 
 using namespace keel;
+using namespace keel::fft;
 
 namespace {
 

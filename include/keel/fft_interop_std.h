@@ -5,7 +5,7 @@
 #include "keel/fft.h"
 #include "keel/interop_std.h"
 
-namespace keel {
+namespace keel::fft {
 
 inline void fft_1d_inplace(std::span<std::complex<double>> buf,
                            FftNormalization norm = FftNormalization::Backward) noexcept {
@@ -47,4 +47,4 @@ inline void ifft_1d(std::span<const std::complex<float>> src, std::span<std::com
     ifft_1d(as_complex_ref(src), as_mut_complex_ref(dst), norm);
 }
 
-} // namespace keel
+} // namespace keel::fft

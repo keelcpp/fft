@@ -8,7 +8,7 @@
 #include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
-namespace keel::detail {
+namespace keel::fft::detail {
 namespace HWY_NAMESPACE {
 
 namespace hn = hwy::HWY_NAMESPACE;
@@ -185,12 +185,12 @@ void Radix4Pow4SoAF32(c32* buf, usize n, const c32* w_fwd, f32* re, f32* im, f32
 }
 
 } // namespace HWY_NAMESPACE
-} // namespace keel::detail
+} // namespace keel::fft::detail
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 HWY_EXPORT(Radix4Pow4SoAStagesF64);
 HWY_EXPORT(Radix4Pow4SoAF64);
@@ -233,6 +233,6 @@ void hwy_radix4_pow4_soa_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     HWY_DYNAMIC_DISPATCH(Radix4Pow4SoAF32)(buf, n, w_fwd, re, im, sw_base, stride);
 }
 
-} // namespace keel::detail
+} // namespace keel::fft::detail
 
 #endif // HWY_ONCE

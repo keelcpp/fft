@@ -10,7 +10,7 @@
 #include <malloc.h>
 #endif
 
-namespace keel {
+namespace keel::fft {
 
 namespace fft_kernels {
 
@@ -1142,4 +1142,4 @@ void ifft_batch_symmetric(ArrayRef<c32> src, MutArrayRef<f32> dst, const FftBatc
     cached_plan_f32(n).exec_batch_symmetric_ifft(src, dst, layout, norm);
 }
 
-} // namespace keel
+} // namespace keel::fft

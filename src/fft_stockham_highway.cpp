@@ -8,7 +8,7 @@
 #include <hwy/highway.h>
 
 HWY_BEFORE_NAMESPACE();
-namespace keel::detail {
+namespace keel::fft::detail {
 namespace HWY_NAMESPACE {
 
 namespace hn = hwy::HWY_NAMESPACE;
@@ -87,12 +87,12 @@ void StockhamF32(c32* x, c32* work, usize n, const c32* w_fwd, f32* stage_wr, f3
 }
 
 } // namespace HWY_NAMESPACE
-} // namespace keel::detail
+} // namespace keel::fft::detail
 HWY_AFTER_NAMESPACE();
 
 #if HWY_ONCE
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 HWY_EXPORT(StockhamF64);
 HWY_EXPORT(StockhamF32);
@@ -115,6 +115,6 @@ void hwy_stockham_inplace(c32* buf, usize n, const c32* w_fwd) noexcept {
     HWY_DYNAMIC_DISPATCH(StockhamF32)(buf, work, n, w_fwd, stage_wr, stage_wi);
 }
 
-} // namespace keel::detail
+} // namespace keel::fft::detail
 
 #endif // HWY_ONCE

@@ -4,7 +4,7 @@
 #include "keel/complex.h"
 #include "keel/result.h"
 
-namespace keel {
+namespace keel::fft {
 
 enum class FftDirection : i8 {
     Forward = -1,
@@ -526,4 +526,4 @@ constexpr void ifftshift_1d(ArrayRef<T> src, MutArrayRef<T> dst) noexcept {
     }
 }
 
-} // namespace keel
+} // namespace keel::fft

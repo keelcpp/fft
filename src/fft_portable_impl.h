@@ -2,7 +2,7 @@
 
 #include "fft_internal.h"
 
-namespace keel::detail {
+namespace keel::fft::detail {
 
 template <typename Cplx>
 inline void portable_radix2_inplace(Cplx* buf, usize n, const Cplx* w_fwd) noexcept {
@@ -353,4 +353,4 @@ inline void portable_irfft_store_interleaved(const T* z_re, const T* z_im, usize
     }
 }
 
-} // namespace keel::detail
+} // namespace keel::fft::detail
